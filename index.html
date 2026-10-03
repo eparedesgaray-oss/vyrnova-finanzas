@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VYRNOVA® Finanzas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --pri:#2563eb;
+  --pri-osc:#1d4ed8;
+  --gris:#374151;
+  --gris-claro:#6b7280;
+  --suc:#16a34a;
+  --dan:#ef4444;
+  --war:#f59e0b;
+  --bg:#0f172a;
+  --bg2:#1e293b;
+  --bg3:#334155;
+  --txt:#f8fafc;
+  --txt2:#cbd5e1;
+  --bor:#475569;
+  --rad:12px;
+  --somb:0 4px 12px rgba(0,0,0,.3)
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:80px}
+header{background:var(--bg2);padding:14px 16px;position:sticky;top:0;z-index:100;box-shadow:var(--somb);border-bottom:2px solid var(--pri)}
+.logo-contenedor{display:flex;align-items:center;gap:12px}
+.logo-img{height:52px;width:auto}
+.logo-texto h1{font-size:1.25rem;font-weight:700;color:var(--pri);line-height:1.2}
+.logo-texto h1 span{font-size:.7rem;color:var(--gris-claro);font-weight:400;vertical-align:super}
+.logo-texto p{font-size:.78rem;color:var(--txt2);margin-top:2px}
+.sub{font-size:.85rem;color:var(--txt2);margin-top:2px}
+.top-actions{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.icon-btn{background:var(--bg3);border:none;color:var(--txt);padding:8px 10px;border-radius:var(--rad);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:.85rem}
+.icon-btn:hover{background:var(--bor)}
+.tabs{display:flex;background:var(--bg2);margin:12px;border-radius:var(--rad);overflow:hidden}
+.tab{flex:1;padding:12px;border:none;background:transparent;color:var(--txt2);cursor:pointer;font-weight:500}
+.tab.activo{background:var(--pri);color:white}
+.seccion{padding:12px;display:none}
+.seccion.activa{display:block}
+.card{background:var(--bg2);border-radius:var(--rad);padding:16px;margin-bottom:12px;box-shadow:var(--somb)}
+.card h3{font-size:.9rem;color:var(--txt2);margin-bottom:8px}
+.valor{font-size:1.75rem;font-weight:700}
+.ing{color:var(--suc)}
+.gas{color:var(--dan)}
+.balance{color:var(--pri)}
+.fila{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.grupo{flex:1;min-width:140px}
+label{display:block;font-size:.8rem;color:var(--txt2);margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bor);border-radius:8px;background:var(--bg3);color:var(--txt);font-size:.9rem}
+input:focus,select:focus{outline:none;border-color:var(--pri)}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.95rem}
+.btn-suc{background:var(--suc);color:white}
+.btn-dan{background:var(--dan);color:white}
+.btn-pri{background:var(--pri);color:white}
+.btn-pri:hover{background:var(--pri-osc)}
+.btn-aux{background:var(--bg3);color:var(--txt)}
+.btn-volver{background:var(--pri);color:white;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px}
+.btn-volver:hover{opacity:.9}
+.campos-extra{background:rgba(37,99,235,.1);border:1px solid var(--pri);border-radius:8px;padding:12px;margin:10px 0;display:none}
+.campos-extra.vis{display:block}
+.transf{border-color:var(--war);background:rgba(245,158,11,.1)}
+.cred-ing{border-color:var(--suc);background:rgba(22,163,74,.1)}
+.cred-gas{border-color:var(--dan);background:rgba(239,68,68,.1)}
+.renta{border-color:#22c55e;background:rgba(34,197,94,.1)}
+.lista{margin-top:12px}
+.item{background:var(--bg2);border-radius:8px;padding:12px;margin-bottom:8px;border-left:4px solid var(--pri)}
+.item.ingreso{border-left-color:var(--suc)}
+.item.gasto{border-left-color:var(--dan)}
+.item .det{font-size:.8rem;color:var(--txt2);margin-top:4px}
+.item .acciones{display:flex;gap:6px;margin-top:8px}
+.item .acciones button{padding:4px 8px;border:none;border-radius:4px;font-size:.75rem;cursor:pointer}
+.prog{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px}
+.prog-bar{height:100%;background:var(--suc);transition:width .3s}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.modal.vis{display:flex}
+.modal-cont{background:var(--bg2);border-radius:var(--rad);padding:20px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto}
+.recibo{background:white;color:#111;padding:24px;border-radius:8px;font-family:Arial,Helvetica,sans-serif}
+.recibo-logo{text-align:center;margin-bottom:15px}
+.recibo-logo img{height:60px}
+.recibo h2{text-align:center;border-bottom:2px solid var(--pri);padding-bottom:10px;margin-bottom:15px;color:var(--pri)}
+.recibo .fila-r{display:flex;justify-content:space-between;margin:8px 0}
+.recibo .monto{font-size:1.5rem;font-weight:bold;text-align:center;margin:15px 0;color:var(--pri)}
+.recibo .firma{margin-top:40px;text-align:center;border-top:1px solid #999;padding-top:10px}
+.aviso{font-size:.8rem;color:var(--war);margin-top:6px}
+.aviso-suc{color:var(--suc);margin-top:6px;font-size:.8rem}
+.marca-pie{text-align:center;margin-top:20px;font-size:.75rem;color:var(--gris-claro)}
+.marca-pie strong{color:var(--pri)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-contenedor">
+    <svg class="logo-img" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="v-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4b5563"/>
+          <stop offset="50%" stop-color="#2563eb"/>
+          <stop offset="100%" stop-color="#0ea5e9"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="100" cy="100" rx="85" ry="45" fill="none" stroke="#2563eb" stroke-width="2.5" transform="rotate(20 100 100)"/>
+      <polygon points="55,50 85,50 100,100 115,50 145,50 110,150 90,150" fill="url(#v-grad)"/>
+      <rect x="155" y="40" width="10" height="10" fill="#2563eb"/>
+      <rect x="40" y="85" width="10" height="10" fill="#2563eb"/>
+      <rect x="145" y="95" width="10" height="10" fill="#2563eb"/>
+      <rect x="30" y="110" width="6" height="6" fill="#4b5563"/>
+      <rect x="160" y="120" width="6" height="6" fill="#4b5563"/>
+    </svg>
+    <div class="logo-texto">
+      <h1>VYRNOVA<span>®</span> Finanzas</h1>
+      <p>Innovación tecnológica y soluciones digitales</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" onclick="exportarExcel()">📊 Excel</button>
+    <button class="icon-btn" onclick="generarReporteCreditosPDF()">📄 Reporte PDF</button>
+    <button class="icon-btn" onclick="respaldar()">💾 Respaldar</button>
+    <button class="icon-btn" onclick="document.getElementById('cargarInput').click()">📂 Cargar</button>
+    <input type="file" id="cargarInput" accept=".json" style="display:none" onchange="cargarRespaldo(this)">
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab activo" data-sec="resumen">Resumen</button>
+  <button class="tab" data-sec="registrar">Registrar</button>
+  <button class="tab" data-sec="movimientos">Movimientos</button>
+</div>
+
+<section class="seccion activa" id="resumen">
+  <div class="card">
+    <h3>Balance Total</h3>
+    <div class="valor balance" id="balanceTotal">$0.00</div>
+  </div>
+  <div class="card">
+    <h3>Esta Semana</h3>
+    <div class="fila">
+      <div class="grupo"><label>Ingresos</label><div class="valor ing" id="semIng">$0.00</div></div>
+      <div class="grupo"><label>Gastos</label><div class="valor gas" id="semGas">$0.00</div></div>
+    </div>
+    <div style="margin-top:10px"><label>Disponible</label><div class="valor balance" id="semSaldo">$0.00</div></div>
+  </div>
+  <div class="card">
+    <h3>Presupuesto Semanal</h3>
+    <div class="fila">
+      <div class="grupo">
+        <label>Límite $</label>
+        <input type="number" id="limiteSem" placeholder="0" onchange="guardarLimite()">
+      </div>
+      <div class="grupo">
+        <label>Disponible</label>
+        <div class="valor" id="dispPresup">$0.00</div>
+      </div>
+    </div>
+    <div class="prog"><div class="prog-bar" id="barraPresup" style="width:0%"></div></div>
+  </div>
+  <div class="card">
+    <h3>Resumen de Créditos</h3>
+    <div style="margin:8px 0">
+      <label>Total Recibido:</label>
+      <span class="valor ing" id="credRecibido">$0.00</span>
+    </div>
+    <div style="margin:8px 0">
+      <label>Total Pagado:</label>
+      <span class="valor gas" id="credPagado">$0.00</span>
+    </div>
+    <div style="margin:8px 0">
+      <label>Saldo Pendiente:</label>
+      <span class="valor" id="credPendiente">$0.00</span>
+    </div>
+    <button class="btn btn-pri" style="margin-top:10px" onclick="generarReporteCreditosPDF()">📄 Reporte Completo PDF</button>
+  </div>
+  <div class="marca-pie">
+    <strong>VYRNOVA®</strong> — Innovación tecnológica y soluciones digitales
+  </div>
+</section>
+
+<section class="seccion" id="registrar">
+  <button class="btn-volver" onclick="irAResumen()">⬅️ Volver</button>
+  
+  <div class="card">
+    <div class="fila">
+      <button class="btn btn-suc" id="btnIng" onclick="cambiarTipo('ingreso')">💰 Ingreso</button>
+      <button class="btn btn-aux" id="btnGas" onclick="cambiarTipo('gasto')">💸 Gasto</button>
+    </div>
+    <div class="fila" style="margin-top:12px">
+      <div class="grupo">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+      <div class="grupo">
+        <label>Monto $</label>
+        <input type="number" step="0.01" id="monto" placeholder="0.00" required>
+      </div>
+    </div>
+    <div class="fila">
+      <div class="grupo">
+        <label>Categoría</label>
+        <select id="categoria" onchange="mostrarCamposExtra()">
+          <option value="">Seleccionar...</option>
+        </select>
+      </div>
+    </div>
+    <div class="fila">
+      <div class="grupo" style="flex:2">
+        <label>Descripción / Concepto</label>
+        <input type="text" id="descripcion" placeholder="Ej: Pago mensual, compra, etc.">
+      </div>
+    </div>
+
+    <div class="campos-extra cred-ing" id="camposCredIng">
+      <h4 style="margin-bottom:10px;color:var(--suc)">Datos del Crédito Recibido</h4>
+      <div class="aviso-suc">✅ Este monto se suma como ingreso</div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Institución / Acreedor</label>
+          <input type="text" id="credIngInst" placeholder="Ej: Banco, tienda, persona">
+        </div>
+        <div class="grupo">
+          <label>Tasa de interés %</label>
+          <input type="number" step="0.01" id="credIngTasa" placeholder="Opcional">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Plazo</label>
+          <input type="text" id="credIngPlazo" placeholder="Ej: 12 meses">
+        </div>
+      </div>
+    </div>
+
+    <div class="campos-extra cred-gas" id="camposCredGas">
+      <h4 style="margin-bottom:10px;color:var(--dan)">Pago de Crédito</h4>
+      <div class="aviso">💡 El saldo se actualiza automáticamente</div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Institución / Acreedor</label>
+          <input type="text" id="credGasInst" placeholder="Ej: Banco, tienda, persona">
+        </div>
+        <div class="grupo">
+          <label>Monto Total del Crédito $</label>
+          <input type="number" step="0.01" id="credGasMontoCred" placeholder="El monto original">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Tasa %</label>
+          <input type="number" step="0.01" id="credGasTasa" placeholder="0">
+        </div>
+        <div class="grupo">
+          <label>Plazo / Cuotas</label>
+          <input type="text" id="credGasPlazo" placeholder="Ej: 12 cuotas">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="grupo">
+          <label>N° de cuota</label>
+          <input type="number" id="credGasCuotas" placeholder="Ej: 3">
+        </div>
+        <div class="grupo">
+          <label>Saldo anterior $</label>
+          <input type="number" step="0.01" id="credGasSaldo" placeholder="Saldo antes de este pago">
+        </div>
+      </div>
+    </div>
+
+    <div class="campos-extra transf" id="camposTransf">
+      <h4 style="margin-bottom:10px;color:var(--war)">Datos de Transferencia</h4>
+      <div class="fila">
+        <div class="grupo">
+          <label>Banco / Origen</label>
+          <input type="text" id="trBanco" placeholder="Nombre del banco">
+        </div>
+        <div class="grupo">
+          <label>Cuenta / CLABE</label>
+          <input type="text" id="trCuenta" placeholder="Número">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Beneficiario</label>
+          <input type="text" id="trBenef" placeholder="Nombre">
+        </div>
+        <div class="grupo">
+          <label>Folio / Referencia</label>
+          <input type="text" id="trFolio" placeholder="Código">
+        </div>
+      </div>
+    </div>
+
+    <div class="campos-extra renta" id="camposRenta">
+      <h4 style="margin-bottom:10px;color:#22c55e">Datos de Renta</h4>
+      <div class="fila">
+        <div class="grupo">
+          <label>Arrendatario</label>
+          <input type="text" id="rentaArrend" placeholder="Nombre">
+        </div>
+        <div class="grupo">
+          <label>Dirección / Inmueble</label>
+          <input type="text" id="rentaDir" placeholder="Domicilio">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="grupo">
+          <label>Periodo</label>
+          <input type="text" id="rentaPer" placeholder="Ej: Octubre 2026">
+        </div>
+        <div class="grupo">
+          <label>Observaciones / Saldo</label>
+          <input type="text" id="rentaObs" placeholder="Abono, pendiente, etc.">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-pri" style="margin-top:16px" onclick="guardarMovimiento()">💾 Guardar Movimiento</button>
+  </div>
+  <div class="marca-pie">
+    <strong>VYRNOVA®</strong> — Innovación tecnológica y soluciones digitales
+  </div>
+</section>
+
+<section class="seccion" id="movimientos">
+  <button class="btn-volver" onclick="irAResumen()">⬅️ Volver</button>
+  
+  <div class="card">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="icon-btn" onclick="filtrarMovs('todos')">Todos</button>
+      <button class="icon-btn" onclick="filtrarMovs('ingreso')">Ingresos</button>
+      <button class="icon-btn" onclick="filtrarMovs('gasto')">Gastos</button>
+      <button class="icon-btn" onclick="generarReporteCreditosPDF()">📄 Reporte PDF</button>
+    </div>
+    <div class="lista" id="listaMovs"></div>
+  </div>
+  <div class="marca-pie">
+    <strong>VYRNOVA®</strong> — Innovación tecnológica y soluciones digitales
+  </div>
+</section>
+
+<div class="modal" id="modalRecibo">
+  <div class="modal-cont">
+    <div class="recibo" id="cuerpoRecibo"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-suc" onclick="compartirRecibo()">📤 Compartir</button>
+      <button class="btn btn-aux" onclick="cerrarRecibo()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+let tipoActivo = 'ingreso';
+let movimientos = [];
+let limiteSemanal = 0;
+let filtroActual = 'todos';
+
+// ✅ CATEGORÍAS ACTUALIZADAS
+const catIngreso = ['Nómina', 'Tarjeta de Despensa', 'Freelance', 'Créditos', 'Renta', 'Transferencia', 'Otro'];
+const catGasto = ['Entretenimiento', 'Servicios', 'Tarjeta de Despensa', 'Créditos', 'Renta', 'Transferencia', 'Personal', 'Otro'];
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarDatos();
+  document.getElementById('fecha').valueAsDate = new Date();
+  actualizarCategorias();
+  actualizarTodo();
+  
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+      tab.classList.add('activo');
+      const sec = tab.getAttribute('data-sec');
+      document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+      document.getElementById(sec).classList.add('activa');
+      if(sec === 'movimientos') renderizarLista();
+    });
+  });
+});
+
+function irAResumen() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+  document.querySelector('[data-sec="resumen"]').classList.add('activo');
+  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+  document.getElementById('resumen').classList.add('activa');
+}
+
+function cambiarTipo(tipo) {
+  tipoActivo = tipo;
+  document.getElementById('btnIng').className = tipo === 'ingreso' ? 'btn btn-suc' : 'btn btn-aux';
+  document.getElementById('btnGas').className = tipo === 'gasto' ? 'btn btn-dan' : 'btn btn-aux';
+  actualizarCategorias();
+  mostrarCamposExtra();
+}
+
+function actualizarCategorias() {
+  const sel = document.getElementById('categoria');
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  const lista = tipoActivo === 'ingreso' ? catIngreso : catGasto;
+  lista.forEach(c => {
+    const op = document.createElement('option');
+    op.value = c; op.textContent = c;
+    sel.appendChild(op);
+  });
+}
+
+function mostrarCamposExtra() {
+  const cat = document.getElementById('categoria').value;
+  document.getElementById('camposCredIng').classList.remove('vis');
+  document.getElementById('camposCredGas').classList.remove('vis');
+  document.getElementById('camposTransf').classList.remove('vis');
+  document.getElementById('camposRenta').classList.remove('vis');
+  
+  if(cat === 'Créditos') {
+    if(tipoActivo === 'ingreso') {
+      document.getElementById('camposCredIng').classList.add('vis');
+    } else {
+      document.getElementById('camposCredGas').classList.add('vis');
+      const ultCred = [...movimientos].reverse().find(m => m.categoria === 'Créditos' && m.tipo === 'gasto' && m.cred);
+      if(ultCred) {
+        document.getElementById('credGasInst').value = ultCred.cred.institucion || '';
+        document.getElementById('credGasMontoCred').value = ultCred.cred.montoCred || '';
+        document.getElementById('credGasTasa').value = ultCred.cred.tasa || '';
+        document.getElementById('credGasPlazo').value = ultCred.cred.plazo || '';
+        document.getElementById('credGasSaldo').value = ultCred.cred.saldo || '';
+      }
+    }
+  } else if(cat === 'Transferencia') {
+    document.getElementById('camposTransf').classList.add('vis');
+  } else if(cat === 'Renta') {
+    document.getElementById('camposRenta').classList.add('vis');
+  }
+}
+
+function guardarMovimiento() {
+  const monto = parseFloat(document.getElementById('monto').value);
+  const fecha = document.getElementById('fecha').value;
+  const cat = document.getElementById('categoria').value;
+  const desc = document.getElementById('descripcion').value;
+  
+  if(!monto || !fecha || !cat) return alert('Completa los datos obligatorios');
+  
+  const mov = {
+    id: Date.now(),
+    tipo: tipoActivo,
+    fecha,
+    monto,
+    categoria: cat,
+    descripcion: desc,
+    cred: null,
+    transf: null,
+    renta: null
+  };
+  
+  if(cat === 'Créditos') {
+    if(tipoActivo === 'ingreso') {
+      mov.cred = {
+        tipo: 'recibido',
+        institucion: document.getElementById('credIngInst').value,
+        tasa: document.getElementById('credIngTasa').value || '—',
+        plazo: document.getElementById('credIngPlazo').value,
+        montoTotal: monto
+      };
+    } else {
+      const saldoAnt = parseFloat(document.getElementById('credGasSaldo').value) || 0;
+      mov.cred = {
+        tipo: 'pago',
+        institucion: document.getElementById('credGasInst').value,
+        montoCred: parseFloat(document.getElementById('credGasMontoCred').value) || 0,
+        tasa: document.getElementById('credGasTasa').value || '—',
+        plazo: document.getElementById('credGasPlazo').value,
+        cuota: document.getElementById('credGasCuotas').value || '—',
+        saldoAnterior: saldoAnt,
+        saldo: Math.max(0, saldoAnt - monto)
+      };
+    }
+  } else if(cat === 'Transferencia') {
+    mov.transf = {
+      banco: document.getElementById('trBanco').value,
+      cuenta: document.getElementById('trCuenta').value,
+      beneficiario: document.getElementById('trBenef').value,
+      folio: document.getElementById('trFolio').value
+    };
+  } else if(cat === 'Renta') {
+    mov.renta = {
+      arrendatario: document.getElementById('rentaArrend').value,
+      direccion: document.getElementById('rentaDir').value,
+      periodo: document.getElementById('rentaPer').value,
+      observaciones: document.getElementById('rentaObs').value
+    };
+  }
+  
+  movimientos.push(mov);
+  guardarDatos();
+  actualizarTodo();
+  
+  document.getElementById('monto').value = '';
+  document.getElementById('descripcion').value = '';
+  document.getElementById('categoria').value = '';
+  document.querySelectorAll('.campos-extra').forEach(c => c.classList.remove('vis'));
+  
+  alert('✅ Movimiento guardado — VYRNOVA®');
+}
+
+function obtenerSemana() {
+  const hoy = new Date();
+  const dia = hoy.getDay();
+  const ini = new Date(hoy);
+  ini.setDate(hoy.getDate() - dia + (dia === 0 ? -6 : 1));
+  const fin = new Date(ini);
+  fin.setDate(ini.getDate() + 6);
+  return {
+    inicio: ini.toISOString().split('T')[0],
+    fin: fin.toISOString().split('T')[0]
+  };
+}
+
+function actualizarTodo() {
+  const sem = obtenerSemana();
+  let semIng = 0, semGas = 0, totalIng = 0, totalGas = 0;
+  let credRec = 0, credPag = 0, ultSaldo = 0;
+  
+  movimientos.forEach(m => {
+    const imp = m.monto;
+    if(m.tipo === 'ingreso') {
+      totalIng += imp;
+      if(m.categoria === 'Créditos') credRec += imp;
+      if(m.fecha >= sem.inicio && m.fecha <= sem.fin) semIng += imp;
+    } else {
+      totalGas += imp;
+      if(m.categoria === 'Créditos') credPag += imp;
+      if(m.fecha >= sem.inicio && m.fecha <= sem.fin) semGas += imp;
+    }
+    if(m.categoria === 'Créditos' && m.tipo === 'gasto' && m.cred) {
+      ultSaldo = m.cred.saldo;
+    }
+  });
+  
+  document.getElementById('balanceTotal').textContent = formatoMoneda(totalIng - totalGas);
+  document.getElementById('semIng').textContent = formatoMoneda(semIng);
+  document.getElementById('semGas').textContent = formatoMoneda(semGas);
+  document.getElementById('semSaldo').textContent = formatoMoneda(semIng - semGas);
+  
+  const disp = limiteSemanal - semGas;
+  document.getElementById('limiteSem').value = limiteSemanal || '';
+  document.getElementById('dispPresup').textContent = formatoMoneda(disp);
+  const porc = limiteSemanal ? Math.min(100, (semGas / limiteSemanal) * 100) : 0;
+  document.getElementById('barraPresup').style.width = porc + '%';
+  
+  document.getElementById('credRecibido').textContent = formatoMoneda(credRec);
+  document.getElementById('credPagado').textContent = formatoMoneda(credPag);
+  document.getElementById('credPendiente').textContent = formatoMoneda(ultSaldo);
+  
+  renderizarLista();
+}
+
+function renderizarLista() {
+  const cont = document.getElementById('listaMovs');
+  let lista = movimientos;
+  if(filtroActual !== 'todos') {
+    lista = movimientos.filter(m => m.tipo === filtroActual);
+  }
+  lista = lista.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  
+  cont.innerHTML = '';
+  if(lista.length === 0) {
+    cont.innerHTML = '<p style="text-align:center;color:var(--txt2);padding:20px">Sin movimientos registrados</p>';
+    return;
+  }
+  
+  lista.forEach(m => {
+    const div = document.createElement('div');
+    div.className = `item ${m.tipo}`;
+    let det = '';
+    if(m.cred) {
+      if(m.cred.tipo === 'recibido') {
+        det = `🏦 Crédito Recibido — ${m.cred.institucion || 'Sin institución'} | Tasa: ${m.cred.tasa} | Plazo: ${m.cred.plazo || 'Indefinido'}`;
+      } else {
+        det = `💳 Pago — ${m.cred.institucion || 'Sin institución'} | Pago: ${formatoMoneda(m.monto)} | Saldo Ant: ${formatoMoneda(m.cred.saldoAnterior)} → Saldo Act: ${formatoMoneda(m.cred.saldo)}`;
+      }
+    } else if(m.transf) {
+      det = `🏦 ${m.transf.banco} | ${m.transf.beneficiario || 'Sin beneficiario'} | Folio: ${m.transf.folio || 'N/A'}`;
+    } else if(m.renta) {
+      det = `🏠 ${m.renta.arrendatario || 'Sin arrendatario'} | ${m.renta.periodo || 'Sin periodo'}`;
+    }
+    
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600">${m.categoria}</div>
+          <div style="font-size:.8rem;color:var(--txt2)">${m.fecha} — ${m.descripcion || 'Sin descripción'}</div>
+        </div>
+        <div style="font-weight:700;${m.tipo === 'ingreso' ? 'color:var(--suc)' : 'color:var(--dan)'}">
+          ${m.tipo === 'ingreso' ? '+' : '-'}${formatoMoneda(m.monto)}
+        </div>
+      </div>
+      ${det ? `<div class="det">${det}</div>` : ''}
+      <div class="acciones">
+        ${(m.categoria === 'Transferencia' || m.categoria === 'Renta') ? `<button onclick="generarRecibo(${m.id})">🧾 Recibo</button>` : ''}
+        <button onclick="eliminarMov(${m.id})" style="background:var(--dan);color:white">🗑️</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+function filtrarMovs(filtro) {
+  filtroActual = filtro;
+  renderizarLista();
+}
+
+function eliminarMov(id) {
+  if(!confirm('¿Eliminar este movimiento?')) return;
+  movimientos = movimientos.filter(m => m.id !== id);
+  guardarDatos();
+  actualizarTodo();
+}
+
+async function generarReporteCreditosPDF() {
+  const credIng = movimientos.filter(m => m.categoria === 'Créditos' && m.tipo === 'ingreso');
+  const credGas = movimientos.filter(m => m.categoria === 'Créditos' && m.tipo === 'gasto');
+  
+  if(credIng.length === 0 && credGas.length === 0) {
+    return alert('⚠️ No hay movimientos de créditos registrados');
+  }
+
+  try {
+    const doc = new jsPDF();
+    const hoy = new Date();
+    const fechaRep = hoy.toLocaleDateString('es-MX');
+    
+    doc.setFontSize(20);
+    doc.setTextColor(37, 99, 235);
+    doc.text('VYRNOVA® Finanzas', 105, 22, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Innovación tecnológica y soluciones digitales', 105, 32, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Reporte de Créditos — Generado el: ${fechaRep}`, 105, 40, { align: 'center' });
+    doc.setLineWidth(0.7);
+    doc.setDrawColor(37, 99, 235);
+    doc.line(20, 46, 190, 46);
+
+    let y = 56;
+
+    doc.setFontSize(13);
+    doc.setTextColor(22, 163, 74);
+    doc.text('I. CRÉDITOS RECIBIDOS', 20, y);
+    y += 8;
+    
+    if(credIng.length > 0) {
+      const datos = credIng.map(m => [
+        m.fecha,
+        m.cred?.institucion || '—',
+        m.descripcion || '—',
+        formatoMoneda(m.monto),
+        m.cred?.tasa || '—',
+        m.cred?.plazo || '—'
+      ]);
+      
+      doc.autoTable({
+        startY: y,
+        head: [['Fecha', 'Institución', 'Concepto', 'Monto', 'Tasa %', 'Plazo']],
+        body: datos,
+        theme: 'grid',
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 3: { halign: 'right' } },
+        margin: { left: 20, right: 20 }
+      });
+      y = doc.lastAutoTable.finalY + 12;
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Sin créditos recibidos', 20, y);
+      y += 12;
+    }
+
+    doc.setFontSize(13);
+    doc.setTextColor(239, 68, 68);
+    doc.text('II. PAGOS REALIZADOS', 20, y);
+    y += 8;
+
+    if(credGas.length > 0) {
+      const datos = credGas.map(m => [
+        m.fecha,
+        m.cred?.institucion || '—',
+        m.descripcion || 'Pago de cuota',
+        formatoMoneda(m.monto),
+        formatoMoneda(m.cred?.montoCred || 0),
+        m.cred?.tasa || '—',
+        formatoMoneda(m.cred?.saldoAnterior || 0),
+        formatoMoneda(m.cred?.saldo || 0)
+      ]);
+      
+      doc.autoTable({
+        startY: y,
+        head: [['Fecha', 'Institución', 'Concepto', 'Pago $', 'Monto Total $', 'Tasa %', 'Saldo Ant.', 'Saldo Act.']],
+        body: datos,
+        theme: 'grid',
+        headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 
+          3: { halign: 'right' }, 4: { halign: 'right' },
+          6: { halign: 'right' }, 7: { halign: 'right' }
+        },
+        margin: { left: 20, right: 20 }
+      });
+      y = doc.lastAutoTable.finalY + 12;
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Sin pagos registrados', 20, y);
+      y += 12;
+    }
+
+    doc.setFontSize(13);
+    doc.setTextColor(37, 99, 235);
+    doc.text('III. RESUMEN GENERAL', 20, y);
+    y += 10;
+
+    const totalRec = credIng.reduce((s, m) => s + m.monto, 0);
+    const totalPag = credGas.reduce((s, m) => s + m.monto, 0);
+    const saldoAct = credGas.length > 0 ? credGas[credGas.length - 1].cred?.saldo || 0 : 0;
+
+    doc.autoTable({
+      startY: y,
+      body: [
+        ['Total Recibido', formatoMoneda(totalRec)],
+        ['Total Pagado', formatoMoneda(totalPag)],
+        ['Saldo Pendiente Actual', formatoMoneda(saldoAct)],
+        ['Balance Neto', formatoMoneda(totalRec - totalPag)]
+      ],
+      theme: 'plain',
+      bodyStyles: { fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 130 }, 1: { halign: 'right', fontStyle: 'bold', textColor: [37, 99, 235] } },
+      margin: { left: 20, right: 20 }
+    });
+
+    const paginas = doc.getNumberOfPages();
+    for(let i = 1; i <= paginas; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`VYRNOVA® Finanzas — Página ${i} de ${paginas}`, 105, 290, { align: 'center' });
+    }
+
+    const nomArch = `VYRNOVA_Reporte_Creditos_${hoy.getFullYear()}${String(hoy.getMonth()+1).padStart(2,'0')}${String(hoy.getDate()).padStart(2,'0')}.pdf`;
+    doc.save(nomArch);
+    alert('✅ PDF descargado — VYRNOVA®');
+  } catch(err) {
+    console.error(err);
+    alert('❌ Error al generar el PDF: ' + err.message);
+  }
+}
+
+function generarRecibo(id) {
+  const m = movimientos.find(x => x.id === id);
+  if(!m) return;
+  
+  let html = '';
+  if(m.transf) {
+    html = `
+      <div class="recibo-logo">
+        <strong style="color:#2563eb;font-size:22px">VYRNOVA®</strong>
+      </div>
+      <h2>COMPROBANTE DE TRANSFERENCIA</h2>
+      <div class="fila-r"><strong>Fecha:</strong> ${m.fecha}</div>
+      <div class="fila-r"><strong>Folio:</strong> ${m.transf.folio || '—'}</div>
+      <div class="monto">${formatoMoneda(m.monto)}</div>
+      <div class="fila-r"><strong>Banco:</strong> ${m.transf.banco || '—'}</div>
+      <div class="fila-r"><strong>Cuenta:</strong> ${m.transf.cuenta || '—'}</div>
+      <div class="fila-r"><strong>Beneficiario:</strong> ${m.transf.beneficiario || '—'}</div>
+      <div class="fila-r"><strong>Concepto:</strong> ${m.descripcion || '—'}</div>
+      <div class="firma">Firma y aceptación<br><small>VYRNOVA® — Innovación tecnológica y soluciones digitales</small></div>
+    `;
+  } else if(m.renta) {
+    html = `
+      <div class="recibo-logo">
+        <strong style="color:#2563eb;font-size:22px">VYRNOVA®</strong>
+      </div>
+      <h2>RECIBO DE RENTA</h2>
+      <div class="fila-r"><strong>Fecha:</strong> ${m.fecha}</div>
+      <div class="monto">${formatoMoneda(m.monto)}</div>
+      <div class="fila-r"><strong>Arrendatario:</strong> ${m.renta.arrendatario || '—'}</div>
+      <div class="fila-r"><strong>Inmueble:</strong> ${m.renta.direccion || '—'}</div>
+      <div class="fila-r"><strong>Periodo:</strong> ${m.renta.periodo || '—'}</div>
+      <div class="fila-r"><strong>Observaciones:</strong> ${m.renta.observaciones || '—'}</div>
+      <div class="firma">Firma del arrendador<br><small>VYRNOVA® — Innovación tecnológica y soluciones digitales</small></div>
+    `;
+  }
+  
+  document.getElementById('cuerpoRecibo').innerHTML = html;
+  document.getElementById('modalRecibo').classList.add('vis');
+}
+
+function cerrarRecibo() {
+  document.getElementById('modalRecibo').classList.remove('vis');
+}
+
+function compartirRecibo() {
+  alert('Función de compartir lista — VYRNOVA®');
+  cerrarRecibo();
+}
+
+function formatoMoneda(cant) {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cant || 0);
+}
+
+function guardarDatos() {
+  localStorage.setItem('vyrnova_movs', JSON.stringify(movimientos));
+  localStorage.setItem('vyrnova_limite', limiteSemanal);
+}
+
+function cargarDatos() {
+  const m = localStorage.getItem('vyrnova_movs');
+  if(m) movimientos = JSON.parse(m);
+  const l = localStorage.getItem('vyrnova_limite');
+  if(l) limiteSemanal = parseFloat(l);
+}
+
+function guardarLimite() {
+  limiteSemanal = parseFloat(document.getElementById('limiteSem').value) || 0;
+  guardarDatos();
+  actualizarTodo();
+}
+
+function respaldar() {
+  const datos = {
+    marca: 'VYRNOVA®',
+    movimientos,
+    limiteSemanal,
+    fecha: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `VYRNOVA_Respaldar_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ Respaldo descargado — VYRNOVA®');
+}
+
+function cargarRespaldo(input) {
+  const arch = input.files[0];
+  if(!arch) return;
+  const lector = new FileReader();
+  lector.onload = (e) => {
+    try {
+      const datos = JSON.parse(e.target.result);
+      if(!confirm('¿Reemplazar datos actuales con este respaldo?')) return;
+      movimientos = datos.movimientos || [];
+      limiteSemanal = datos.limiteSemanal || 0;
+      guardarDatos();
+      actualizarTodo();
+      alert('✅ Datos restaurados — VYRNOVA®');
+    } catch {
+      alert('❌ Archivo inválido');
+    }
+  };
+  lector.readAsText(arch);
+  input.value = '';
+}
+
+if(window.Capacitor) {
+  document.addEventListener('backbutton', (e) => {
+    e.preventDefault();
+    irAResumen();
+  });
+}
+</script>
+</body>
+</html>
