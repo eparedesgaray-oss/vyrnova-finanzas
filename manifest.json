@@ -2,12 +2,12 @@
   "background_color": "#0f172a",
   "dir": "ltr",
   "display": "standalone",
-  "name": "VYRNOVA Finanzas",
+  "name": "VYRNOVA",
   "orientation": "any",
   "scope": "/",
   "short_name": "VYRNOVA",
   "start_url": "/",
   "theme_color": "#2563eb",
-  "description": "Control de ingresos, gastos y créditos",
-  "id": "com.vyrnova.finanzas"
+  "id": "com.vyrnova.finanzas",
+  "description": "Control de ingresos, gastos y créditos"
 }
